@@ -6,33 +6,40 @@ http
     //get the path to the file
     const path = __dirname + '/public' + req.url
 
-    fs.stat(path, (err) => {
+    fs.stat(path, (err, stats) => {
+      //if this errors then there is no file and it is a 404
       if(err) {
         res.statusCode = 404;
         res.write('404');
         res.end();
-      } else {
+      } else if(stats.isFile()) {
+        
+        //create a read stream if it is a file and it exists
         const fileStream = fs.createReadStream(path);
+
         fileStream.on("open", function() {
+          //GET MIME TYPE
+          // res.setHeader to mime type
+
           res.statusCode = 200;
           fileStream.pipe(res);
         });
+
+
         fileStream.on("error", function(err) {
-          res.statusCode = 404;
-          res.write('404');
+          res.statusCode = 403;
+          res.write("There was an error with the file permissions");
           res.end();
-        })
+        });
+      } else {
+        // it is a directory and we don't want to give access to it
+        res.statusCode = 403;
+        res.write("No access is given to directories");
+        res.end();
       }
-    })
-    //create a read stream if all is good and read the file
-
-    
-    // pipe it to the response strem
-
-  })
-  .listen(4000);
+    });
+  }).listen(4000);
 
 
 
-//check if requested file exist and if it is indeed a file
 
